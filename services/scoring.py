@@ -42,14 +42,13 @@ def score_program(profile: UserProfile, program: dict) -> Optional[float]:
     avg_ielts = program.get("avg_ielts") or min_ielts or 6.5
     tuition = program.get("tuition_year") or 0
 
-    # Hard filter: GPA must meet the minimum
-    if profile.gpa < min_gpa:
-        return None
-
     total = 0.0
 
-    # GPA score (30 pts max)
-    gpa_score = min((profile.gpa / avg_gpa) * 30, 30)
+    # GPA score (30 pts max) — penalty if below minimum
+    if profile.gpa >= min_gpa:
+        gpa_score = min((profile.gpa / avg_gpa) * 30, 30)
+    else:
+        gpa_score = max((profile.gpa / min_gpa) * 15, 0)  # partial score, max 15
     total += gpa_score
 
     # IELTS score (25 pts max)
