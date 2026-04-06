@@ -96,7 +96,10 @@ async def ask_yandex_gpt(user_message: str, context: str) -> str:
             return data["result"]["alternatives"][0]["message"]["text"]
         except Exception as e:
             logger.error(f"YandexGPT error: {e}")
-            return "Произошла ошибка при обращении к ИИ. Попробуй ещё раз."
+            if hasattr(e, 'response') and e.response is not None:
+                logger.error(f"YandexGPT response: {e.response.status_code} {e.response.text}")
+                return f"Ошибка ИИ ({e.response.status_code}): {e.response.text[:200]}"
+            return f"Ошибка ИИ: {str(e)[:200]}"
 
 
 async def get_ai_response(user_message: str, session: AsyncSession) -> str:
