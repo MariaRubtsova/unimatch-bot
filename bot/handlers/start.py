@@ -5,7 +5,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.database import AsyncSessionLocal
 from db.models import User
-from bot.keyboards import main_menu
+from bot.keyboards import main_menu, admin_button
+
+ADMIN_USER_ID = 1379996156
 from sqlalchemy.dialects.postgresql import insert
 
 router = Router()
@@ -44,6 +46,17 @@ async def cmd_profile(message: Message) -> None:
         "👤 Твой профиль хранится в Mini App.\n"
         "Нажми «Подобрать программы», чтобы обновить данные.",
         reply_markup=main_menu(),
+    )
+
+
+@router.message(Command("admin"))
+async def cmd_admin(message: Message) -> None:
+    if message.from_user.id != ADMIN_USER_ID:
+        return
+    await message.answer(
+        "⚡ <b>Admin Panel</b>",
+        parse_mode="HTML",
+        reply_markup=admin_button(),
     )
 
 

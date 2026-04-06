@@ -5,6 +5,7 @@ from aiogram.types import (
 )
 
 MINI_APP_URL = os.getenv("MINI_APP_URL", "http://localhost:8000/mini_app/index.html")
+ADMIN_APP_URL = os.getenv("APP_URL", "http://localhost:8000") + "/mini_app/admin.html"
 
 
 def main_menu() -> ReplyKeyboardMarkup:
@@ -17,6 +18,12 @@ def main_menu() -> ReplyKeyboardMarkup:
         ],
         resize_keyboard=True,
     )
+
+
+def admin_button() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="⚡ Открыть Admin Panel", web_app=WebAppInfo(url=ADMIN_APP_URL))]
+    ])
 
 
 def cancel_keyboard() -> ReplyKeyboardMarkup:
