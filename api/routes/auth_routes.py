@@ -32,10 +32,12 @@ async def auth_telegram(body: InitDataRequest):
     logger.info(f"init_data received, length: {len(body.init_data)}")
 
     user_data = verify_telegram_init_data(body.init_data)
+    logger.info(f"user_data: {user_data}")
 
     user_id = int(user_data["id"])
     first_name = user_data.get("first_name", "")
     username = user_data.get("username")
+    logger.info(f"user_id={user_id}, first_name={first_name}")
 
     async with AsyncSessionLocal() as session:
         stmt = pg_insert(User).values(
