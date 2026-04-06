@@ -4,8 +4,8 @@ from aiogram.types import (
     ReplyKeyboardMarkup, KeyboardButton, WebAppInfo,
 )
 
-MINI_APP_URL = os.getenv("MINI_APP_URL", "http://localhost:8000/mini_app/index.html")
-ADMIN_APP_URL = os.getenv("APP_URL", "http://localhost:8000") + "/mini_app/admin.html"
+MINI_APP_URL = os.getenv("MINI_APP_URL", "http://localhost:8000/mini_app/index.html") + "?v=2"
+ADMIN_APP_URL = os.getenv("APP_URL", "http://localhost:8000") + "/mini_app/admin.html?v=2"
 
 
 def main_menu() -> ReplyKeyboardMarkup:
