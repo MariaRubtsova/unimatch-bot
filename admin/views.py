@@ -50,7 +50,6 @@ class ProgramAdmin(ModelView, model=Program):
     ]
     column_searchable_list = [Program.university_name, Program.program_name, Program.country]
     column_sortable_list = [Program.deadline, Program.tuition_year, Program.min_gpa]
-    column_filters = ["country", "field", "degree_type", "is_active"]
     # Exclude embedding from edit form (handled separately)
     form_excluded_columns = [Program.embedding, Program.created_at, Program.updated_at]
 
