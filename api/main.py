@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
-from api.routes import match, deadlines, checklist, chat, export, auth_routes
+from api.routes import match, deadlines, checklist, chat, export, auth_routes, admin_api
 from db.database import engine
 from admin.views import setup_admin
 
@@ -27,12 +27,25 @@ app.include_router(deadlines.router)
 app.include_router(checklist.router)
 app.include_router(chat.router)
 app.include_router(export.router)
+app.include_router(admin_api.router)
 
 # Serve Mini App static files with no-cache headers
 from fastapi.responses import FileResponse
 from fastapi import Request
 
 mini_app_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "mini_app")
+
+@app.get("/mini_app/admin.html")
+async def serve_admin_app(request: Request):
+    return FileResponse(
+        os.path.join(mini_app_path, "admin.html"),
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        }
+    )
+
 
 @app.get("/mini_app/index.html")
 async def serve_mini_app(request: Request):
