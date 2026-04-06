@@ -37,6 +37,7 @@ function renderResults(results) {
           <span>🎓 IELTS ${p.min_ielts}+</span>
           <span>📅 ${deadline}</span>
         </div>
+        ${p.url ? `<a href="${p.url}" target="_blank" onclick="event.stopPropagation()" style="display:inline-block;margin-top:8px;font-size:12px;color:var(--accent);text-decoration:none;padding:4px 10px;border:1px solid var(--accent);border-radius:20px;">🔗 Сайт программы</a>` : ""}
         <div class="progress-bar">
           <div class="progress-fill" style="width:${p.score}%; background:${color}"></div>
         </div>
