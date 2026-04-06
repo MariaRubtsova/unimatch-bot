@@ -661,11 +661,13 @@ async function init() {
     if (resp.ok) {
       const data = await resp.json();
       state.token = data.token;
-      // Fill profile from server if Telegram didn't provide it
-      if (!state.firstName && data.first_name) {
-        state.firstName = data.first_name;
-        document.getElementById('user-avatar').textContent = data.first_name[0].toUpperCase();
-        document.getElementById('user-name').textContent = data.first_name;
+      state.userId = data.user_id;
+      // Fill profile from server response
+      const name = data.first_name || '';
+      if (name && name !== 'Dev') {
+        state.firstName = name;
+        document.getElementById('user-avatar').textContent = name[0].toUpperCase();
+        document.getElementById('user-name').textContent = name;
       }
     }
   } catch (e) {

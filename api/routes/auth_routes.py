@@ -29,6 +29,8 @@ async def auth_telegram(body: InitDataRequest):
         # Dev mode — no Telegram context
         return TokenResponse(token=create_jwt(0), user_id=0, first_name="Dev")
 
+    logger.info(f"init_data received, length: {len(body.init_data)}")
+
     user_data = verify_telegram_init_data(body.init_data)
 
     user_id = int(user_data["id"])
