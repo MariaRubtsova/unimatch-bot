@@ -25,11 +25,11 @@ async def auth_telegram(body: InitDataRequest):
     logger = logging.getLogger(__name__)
     logger.info(f"init_data length: {len(body.init_data)}, preview: {body.init_data[:80]}")
 
+    logger.info(f"init_data length={len(body.init_data)}, empty={not body.init_data}")
+
     if not body.init_data:
         # Dev mode — no Telegram context
         return TokenResponse(token=create_jwt(0), user_id=0, first_name="Dev")
-
-    logger.info(f"init_data received, length: {len(body.init_data)}")
 
     user_data = verify_telegram_init_data(body.init_data)
     logger.info(f"user_data: {user_data}")

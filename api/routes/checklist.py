@@ -52,6 +52,7 @@ async def get_checklist(
         select(UserDeadline)
         .where(UserDeadline.user_id == user_id)
         .where(UserDeadline.program_id == program_id)
+        .limit(1)
     )
     ud = deadline_result.scalar_one_or_none()
 
