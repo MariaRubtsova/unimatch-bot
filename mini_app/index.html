@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>UniMatch</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --grad1: #667eea;
+  --grad2: #764ba2;
+  --grad3: #f093fb;
+  --grad4: #4facfe;
+  --glass: rgba(255,255,255,0.12);
+  --glass2: rgba(255,255,255,0.18);
+  --glass3: rgba(255,255,255,0.08);
+  --border-glass: rgba(255,255,255,0.25);
+  --border-glass2: rgba(255,255,255,0.15);
+  --text: #ffffff;
+  --text2: rgba(255,255,255,0.75);
+  --text3: rgba(255,255,255,0.45);
+  --green-glass: rgba(16,185,129,0.25);
+  --green-border: rgba(16,185,129,0.5);
+  --green-text: #6ee7b7;
+  --amber-glass: rgba(245,158,11,0.2);
+  --amber-border: rgba(245,158,11,0.45);
+  --amber-text: #fcd34d;
+  --red-glass: rgba(239,68,68,0.2);
+  --red-border: rgba(239,68,68,0.4);
+  --red-text: #fca5a5;
+  --radius: 20px;
+  --radius-sm: 14px;
+  --radius-xs: 10px;
+  --blur: blur(20px);
+  --blur-sm: blur(12px);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  font-family: 'Inter', sans-serif;
+  height: 100%; overflow: hidden;
+  background: #0f0c29;
+}
+
+.bg {
+  position: fixed; inset: 0; z-index: 0;
+  background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+  overflow: hidden;
+}
+.bg-orb {
+  position: absolute; border-radius: 50%;
+  filter: blur(60px); opacity: 0.5;
+  animation: float 8s ease-in-out infinite;
+}
+.orb1 { width: 300px; height: 300px; background: #667eea; top: -80px; right: -60px; animation-delay: 0s; }
+.orb2 { width: 250px; height: 250px; background: #f093fb; bottom: 100px; left: -80px; animation-delay: -3s; }
+.orb3 { width: 180px; height: 180px; background: #4facfe; top: 40%; right: -40px; animation-delay: -5s; }
+.orb4 { width: 150px; height: 150px; background: #764ba2; bottom: 200px; right: 30px; animation-delay: -2s; }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-20px) scale(1.05); }
+}
+
+.app {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column;
+  height: 100dvh; max-width: 430px;
+  margin: 0 auto;
+}
+
+.screen { display: none; flex: 1; overflow-y: auto; padding-bottom: 80px; }
+.screen.active { display: block; }
+.screen::-webkit-scrollbar { display: none; }
+
+.header {
+  padding: 16px 16px 14px;
+  display: flex; align-items: center;
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(15,12,41,0.4);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--border-glass2);
+}
+.header-logo { display: flex; align-items: center; gap: 10px; }
+.logo-mark {
+  width: 34px; height: 34px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--grad1), var(--grad3));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 800; color: #fff; flex-shrink: 0;
+}
+.header-title { font-size: 16px; font-weight: 700; color: var(--text); }
+.header-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
+.back-btn {
+  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+  background: var(--glass); border: 1px solid var(--border-glass2);
+  backdrop-filter: var(--blur-sm); -webkit-backdrop-filter: var(--blur-sm);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: var(--text2); margin-right: 8px;
+}
+
+.step-dots { display: flex; gap: 5px; justify-content: center; padding: 14px 0 6px; }
+.step-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: all .25s; }
+.step-dot.active { width: 20px; border-radius: 3px; background: linear-gradient(90deg, var(--grad1), var(--grad3)); }
+
+.content { padding: 12px 16px 0; }
+
+.screen-title { font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 4px; letter-spacing: -.02em; }
+.screen-sub { font-size: 13px; color: var(--text2); margin-bottom: 20px; line-height: 1.5; }
+.field-label {
+  font-size: 10px; font-weight: 700; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .08em; margin-bottom: 9px;
+}
+.field-row { margin-bottom: 20px; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.chip {
+  padding: 7px 13px; border-radius: 20px; font-size: 12px; font-weight: 600;
+  background: var(--glass3); border: 1px solid var(--border-glass2);
+  color: var(--text2); cursor: pointer; transition: all .18s;
+  backdrop-filter: var(--blur-sm); -webkit-backdrop-filter: var(--blur-sm);
+  user-select: none;
+}
+.chip.selected {
+  background: linear-gradient(135deg, var(--grad1), var(--grad2));
+  border-color: transparent; color: #fff;
+  box-shadow: 0 4px 15px rgba(102,126,234,0.4);
+}
+
+.slider-wrap { display: flex; align-items: center; gap: 10px; }
+.slider-min-max { font-size: 10px; color: var(--text3); min-width: 24px; }
+.slider-val { font-size: 14px; font-weight: 700; color: var(--text); min-width: 55px; text-align: right; }
+input[type=range] {
+  flex: 1; -webkit-appearance: none; height: 4px;
+  background: rgba(255,255,255,0.15); border-radius: 2px; outline: none;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--grad1), var(--grad3));
+  cursor: pointer; box-shadow: 0 2px 10px rgba(102,126,234,0.5);
+  border: 2px solid rgba(255,255,255,0.3);
+}
+
+.btn-primary {
+  width: 100%; padding: 15px;
+  background: linear-gradient(135deg, var(--grad1), var(--grad2));
+  color: #fff; font-size: 14px; font-weight: 700;
+  border: none; border-radius: var(--radius-sm); cursor: pointer;
+  font-family: inherit; letter-spacing: -.01em;
+  box-shadow: 0 8px 25px rgba(102,126,234,0.4);
+  transition: all .18s; position: relative; overflow: hidden;
+}
+.btn-primary:active { transform: scale(0.98); }
+.btn-primary:disabled { opacity: 0.6; cursor: default; transform: none; }
+.btn-secondary {
+  width: 100%; padding: 13px; margin-top: 10px;
+  background: var(--glass3); color: var(--text2);
+  font-size: 13px; font-weight: 600;
+  border: 1px solid var(--border-glass2); border-radius: var(--radius-sm);
+  cursor: pointer; font-family: inherit;
+  backdrop-filter: var(--blur-sm); -webkit-backdrop-filter: var(--blur-sm);
+  transition: all .15s;
+}
+.btn-green {
+  width: 100%; padding: 13px; margin-top: 12px;
+  background: var(--green-glass); color: var(--green-text);
+  font-size: 13px; font-weight: 700;
+  border: 1px solid var(--green-border); border-radius: var(--radius-sm);
+  cursor: pointer; font-family: inherit;
+  backdrop-filter: var(--blur-sm); -webkit-backdrop-filter: var(--blur-sm);
+}
+
+/* RESULTS */
+.prog-card {
+  background: var(--glass);
+  backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--border-glass2);
+  border-radius: var(--radius); padding: 14px; margin-bottom: 10px;
+  cursor: pointer; transition: all .18s;
+  position: relative; overflow: hidden;
+}
+.prog-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+}
+.prog-card.top { border-color: rgba(16,185,129,0.4); }
+.prog-card.top::before { background: linear-gradient(90deg, transparent, rgba(110,231,183,0.5), transparent); }
+.prog-card:active { transform: scale(0.99); }
+.top-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 700; letter-spacing: .03em;
+  background: var(--green-glass); color: var(--green-text);
+  border: 1px solid var(--green-border);
+  padding: 3px 9px; border-radius: 20px; margin-bottom: 9px;
+}
+.prog-name { font-size: 14px; font-weight: 700; color: var(--text); line-height: 1.3; margin-bottom: 2px; }
+.prog-uni { font-size: 12px; color: var(--text2); margin-bottom: 10px; }
+.prog-meta { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+.prog-tag {
+  font-size: 10px; color: var(--text3);
+  background: rgba(255,255,255,0.08); padding: 2px 7px; border-radius: 5px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.prog-score { margin-left: auto; font-size: 15px; font-weight: 800; }
+.prog-bar-wrap { height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 10px; overflow: hidden; }
+.prog-bar { height: 3px; border-radius: 2px; }
+.card-cb-wrap { position: absolute; top: 14px; right: 14px; display: none; }
+.card-cb-wrap input { width: 18px; height: 18px; cursor: pointer; accent-color: #667eea; }
+
+/* CHECKLIST */
+.notif-banner {
+  border-radius: var(--radius-xs); padding: 10px 12px; margin-bottom: 14px;
+  font-size: 12px; line-height: 1.5;
+  display: flex; gap: 8px; align-items: flex-start;
+  backdrop-filter: var(--blur-sm); -webkit-backdrop-filter: var(--blur-sm);
+}
+.banner-amber { background: var(--amber-glass); border: 1px solid var(--amber-border); color: var(--amber-text); }
+.banner-red { background: var(--red-glass); border: 1px solid var(--red-border); color: var(--red-text); }
+.notif-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; background: #fcd34d; }
+.banner-red .notif-dot { background: #fca5a5; }
+
+.progress-label {
+  font-size: 11px; font-weight: 600; color: var(--text2);
+  margin-bottom: 10px; display: flex; justify-content: space-between;
+}
+.cl-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.07);
+  cursor: pointer;
+}
+.cl-item:last-child { border-bottom: none; }
+.checkbox {
+  width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0; margin-top: 1px;
+  background: var(--glass3); border: 1.5px solid rgba(255,255,255,0.2);
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
+}
+.checkbox.checked {
+  background: linear-gradient(135deg, var(--grad1), var(--grad2));
+  border-color: transparent;
+}
+.checkbox.checked::after {
+  content: ''; display: block; width: 10px; height: 6px;
+  border-left: 2px solid #fff; border-bottom: 2px solid #fff;
+  transform: rotate(-45deg) translateY(-1px);
+}
+.cl-text { font-size: 13px; color: var(--text); font-weight: 500; line-height: 1.4; }
+.cl-hint { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+/* DEADLINES */
+.deadline-card {
+  background: var(--glass);
+  backdrop-filter: var(--blur-sm); -webkit-backdrop-filter: var(--blur-sm);
+  border: 1px solid var(--border-glass2);
+  border-radius: var(--radius-sm); padding: 13px 14px; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 12px; cursor: pointer;
+  position: relative; overflow: hidden; transition: all .15s;
+}
+.deadline-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+}
+.deadline-card:active { transform: scale(0.99); }
+.dl-info { flex: 1; min-width: 0; }
+.dl-name { font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dl-uni { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.days-badge { font-size: 10px; font-weight: 700; padding: 5px 10px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
+.days-red { background: var(--red-glass); color: var(--red-text); border: 1px solid var(--red-border); }
+.days-amber { background: var(--amber-glass); color: var(--amber-text); border: 1px solid var(--amber-border); }
+.days-green { background: var(--green-glass); color: var(--green-text); border: 1px solid var(--green-border); }
+
+/* CHAT */
+.chat-wrap { display: flex; flex-direction: column; height: calc(100dvh - 57px - 64px); }
+.chat-messages { flex: 1; overflow-y: auto; padding: 14px 16px; }
+.chat-messages::-webkit-scrollbar { display: none; }
+.msg-bot-wrap { margin-bottom: 10px; }
+.msg-bot {
+  display: inline-block; max-width: 85%;
+  background: var(--glass2); border: 1px solid var(--border-glass2);
+  backdrop-filter: var(--blur-sm); -webkit-backdrop-filter: var(--blur-sm);
+  border-radius: 18px 18px 18px 5px;
+  padding: 10px 13px; font-size: 13px; line-height: 1.5; color: var(--text);
+}
+.msg-user-wrap { text-align: right; margin-bottom: 10px; }
+.msg-user {
+  display: inline-block; max-width: 85%;
+  background: linear-gradient(135deg, var(--grad1), var(--grad2));
+  border-radius: 18px 18px 5px 18px;
+  padding: 10px 13px; font-size: 13px; line-height: 1.5; color: #fff;
+}
+.quick-replies { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.qr-btn {
+  padding: 8px 12px; border-radius: var(--radius-xs);
+  background: var(--glass3); border: 1px solid var(--border-glass2);
+  font-size: 12px; font-weight: 500; color: var(--text2);
+  cursor: pointer; text-align: left; font-family: inherit;
+  backdrop-filter: var(--blur-sm); -webkit-backdrop-filter: var(--blur-sm);
+}
+.chat-input-wrap {
+  padding: 10px 12px;
+  background: rgba(15,12,41,0.5);
+  backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+  border-top: 1px solid var(--border-glass2);
+  display: flex; gap: 8px; align-items: center;
+}
+.chat-input-wrap input {
+  flex: 1; padding: 10px 14px; font-size: 13px;
+  background: var(--glass3); border: 1px solid var(--border-glass2);
+  border-radius: 22px; color: var(--text); font-family: inherit; outline: none;
+}
+.chat-input-wrap input::placeholder { color: var(--text3); }
+.chat-input-wrap input:focus { border-color: rgba(102,126,234,0.5); }
+.send-btn {
+  width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--grad1), var(--grad2));
+  border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 12px rgba(102,126,234,0.4);
+}
+
+/* USER PROFILE */
+.profile-hero { text-align: center; padding: 20px 16px 16px; }
+.user-avatar-wrap {
+  width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 12px;
+  background: linear-gradient(135deg, var(--grad1), var(--grad3));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 800; color: #fff;
+  box-shadow: 0 8px 24px rgba(102,126,234,0.4);
+  border: 2px solid rgba(255,255,255,0.2);
+}
+.user-name { font-size: 18px; font-weight: 800; color: var(--text); margin-bottom: 3px; }
+.user-handle { font-size: 12px; color: var(--text3); }
+.stats-row { display: flex; gap: 10px; margin: 0 16px 16px; }
+.stat-card {
+  flex: 1; background: var(--glass); border: 1px solid var(--border-glass2);
+  border-radius: var(--radius-sm); padding: 12px; text-align: center;
+  backdrop-filter: var(--blur-sm); -webkit-backdrop-filter: var(--blur-sm);
+}
+.stat-val { font-size: 20px; font-weight: 800; color: var(--text); }
+.stat-label { font-size: 10px; color: var(--text3); margin-top: 2px; }
+.settings-section { padding: 0 16px; margin-bottom: 16px; }
+.settings-label { font-size: 10px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; }
+.settings-card {
+  background: var(--glass); border: 1px solid var(--border-glass2);
+  border-radius: var(--radius-sm); overflow: hidden;
+  backdrop-filter: var(--blur-sm); -webkit-backdrop-filter: var(--blur-sm);
+}
+.setting-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 13px 14px; border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.setting-row:last-child { border-bottom: none; }
+.setting-label { font-size: 13px; font-weight: 500; color: var(--text); }
+.setting-val { font-size: 12px; color: var(--text3); }
+
+/* NAV */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 430px;
+  background: rgba(15,12,41,0.7);
+  backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+  border-top: 1px solid var(--border-glass2);
+  display: flex; z-index: 20;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.nav-tab {
+  flex: 1; padding: 10px 4px 8px; text-align: center;
+  font-size: 9px; font-weight: 700; color: var(--text3);
+  cursor: pointer; border-top: 2px solid transparent;
+  transition: all .15s; user-select: none; letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.nav-tab.active { color: var(--text); border-top-color: #667eea; }
+.nav-icon { display: block; font-size: 20px; margin-bottom: 3px; transition: transform .15s; }
+.nav-tab.active .nav-icon { transform: translateY(-1px); }
+
+/* UTILS */
+.empty { text-align: center; padding: 40px 20px; color: var(--text3); font-size: 14px; line-height: 1.6; }
+.empty-icon { font-size: 40px; margin-bottom: 12px; }
+.loading { text-align: center; padding: 40px 20px; color: var(--text3); font-size: 14px; }
+.spinner {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 3px solid rgba(255,255,255,0.1); border-top-color: #667eea;
+  animation: spin .8s linear infinite; margin: 0 auto 12px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="bg">
+  <div class="bg-orb orb1"></div>
+  <div class="bg-orb orb2"></div>
+  <div class="bg-orb orb3"></div>
+  <div class="bg-orb orb4"></div>
+</div>
+
+<div class="app">
+
+  <!-- ПОДБОР -->
+  <div class="screen active" id="screen-profile">
+    <div class="header">
+      <div class="header-logo">
+        <div class="logo-mark">U</div>
+        <div>
+          <div class="header-title">UniMatch</div>
+          <div class="header-sub">подбор программ</div>
+        </div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="step-dots">
+        <div class="step-dot active"></div>
+        <div class="step-dot"></div>
+        <div class="step-dot"></div>
+      </div>
+      <div class="screen-title">Твой профиль</div>
+      <div class="screen-sub">Настрой параметры — подберём подходящие программы</div>
+
+      <div class="field-row">
+        <div class="field-label">Страна</div>
+        <div class="chips" id="chips-country">
+          <div class="chip selected" data-value="Германия">Германия</div>
+          <div class="chip" data-value="Нидерланды">Нидерланды</div>
+          <div class="chip" data-value="Канада">Канада</div>
+          <div class="chip" data-value="Швейцария">Швейцария</div>
+          <div class="chip" data-value="Другая">Другая</div>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-label">Направление</div>
+        <div class="chips" id="chips-field">
+          <div class="chip selected" data-value="cs">CS / IT</div>
+          <div class="chip" data-value="business">Business</div>
+          <div class="chip" data-value="engineering">Engineering</div>
+          <div class="chip" data-value="science">Science</div>
+          <div class="chip" data-value="medicine">Medicine</div>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-label">Тип программы</div>
+        <div class="chips" id="chips-degree">
+          <div class="chip selected" data-value="master">Магистратура</div>
+          <div class="chip" data-value="bachelor">Бакалавриат</div>
+          <div class="chip" data-value="mba">MBA</div>
+          <div class="chip" data-value="phd">PhD</div>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-label">GPA</div>
+        <div class="slider-wrap">
+          <span class="slider-min-max">2.0</span>
+          <input type="range" id="slider-gpa" min="20" max="40" step="1" value="35">
+          <span class="slider-min-max">4.0</span>
+          <span class="slider-val" id="val-gpa">3.5</span>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-label">IELTS</div>
+        <div class="slider-wrap">
+          <span class="slider-min-max">5.0</span>
+          <input type="range" id="slider-ielts" min="50" max="90" step="5" value="70">
+          <span class="slider-min-max">9.0</span>
+          <span class="slider-val" id="val-ielts">7.0</span>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-label">Бюджет (€/год)</div>
+        <div class="slider-wrap">
+          <span class="slider-min-max">0</span>
+          <input type="range" id="slider-budget" min="0" max="50000" step="1000" value="20000">
+          <span class="slider-min-max">50k</span>
+          <span class="slider-val" id="val-budget">20 000 €</span>
+        </div>
+      </div>
+
+      <button class="btn-primary" id="btn-find">Найти программы →</button>
+    </div>
+  </div>
+
+  <!-- РЕЗУЛЬТАТЫ -->
+  <div class="screen" id="screen-results">
+    <div class="header">
+      <button class="back-btn" onclick="showScreen('profile')">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8L10 13" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div>
+        <div class="header-title">Программы</div>
+        <div class="header-sub" id="results-sub">поиск...</div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="step-dots">
+        <div class="step-dot"></div>
+        <div class="step-dot active"></div>
+        <div class="step-dot"></div>
+      </div>
+      <div id="results-list"></div>
+      <div id="results-actions" style="display:none; padding-bottom:8px">
+        <button class="btn-primary" id="btn-add-top5">Сохранить топ-5 в мои заявки</button>
+        <button class="btn-secondary" id="btn-add-manual">Выбрать вручную</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ЧЕКЛИСТ -->
+  <div class="screen" id="screen-checklist">
+    <div class="header">
+      <button class="back-btn" id="checklist-back-btn">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8L10 13" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div>
+        <div class="header-title" id="cl-title">Чеклист</div>
+        <div class="header-sub" id="cl-sub"></div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="step-dots">
+        <div class="step-dot"></div>
+        <div class="step-dot"></div>
+        <div class="step-dot active"></div>
+      </div>
+      <div id="checklist-header"></div>
+      <div id="checklist-list"></div>
+      <button class="btn-green" id="btn-download-ics">📅 Скачать дедлайны .ics</button>
+    </div>
+  </div>
+
+  <!-- МОИ ЗАЯВКИ -->
+  <div class="screen" id="screen-apps">
+    <div class="header">
+      <div class="header-logo">
+        <div class="logo-mark">U</div>
+        <div>
+          <div class="header-title">Мои заявки</div>
+          <div class="header-sub" id="apps-sub">загрузка...</div>
+        </div>
+      </div>
+    </div>
+    <div class="content">
+      <div id="apps-list"></div>
+      <button class="btn-green" onclick="downloadIcs()">📅 Скачать все дедлайны .ics</button>
+    </div>
+  </div>
+
+  <!-- ЧАТ -->
+  <div class="screen" id="screen-chat">
+    <div class="header">
+      <div class="header-logo">
+        <div class="logo-mark">AI</div>
+        <div>
+          <div class="header-title">ИИ-ассистент</div>
+          <div class="header-sub">онлайн · отвечает мгновенно</div>
+        </div>
+      </div>
+    </div>
+    <div class="chat-wrap">
+      <div class="chat-messages" id="chat-messages"></div>
+      <div class="chat-input-wrap">
+        <input type="text" id="chat-input" placeholder="Написать сообщение...">
+        <button class="send-btn" id="chat-send">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 12L12 7L2 2V5.5L8 7L2 8.5V12Z" fill="white"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ПРОФИЛЬ -->
+  <div class="screen" id="screen-user">
+    <div class="header">
+      <div class="header-logo">
+        <div class="logo-mark">U</div>
+        <div>
+          <div class="header-title">Профиль</div>
+          <div class="header-sub">настройки</div>
+        </div>
+      </div>
+    </div>
+    <div class="profile-hero">
+      <div class="user-avatar-wrap" id="user-avatar">U</div>
+      <div class="user-name" id="user-name">Пользователь</div>
+      <div class="user-handle" id="user-handle"></div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-val" id="stat-programs">—</div><div class="stat-label">программ</div></div>
+      <div class="stat-card"><div class="stat-val" id="stat-days">—</div><div class="stat-label">дней до дедлайна</div></div>
+    </div>
+    <div style="padding: 0 16px 16px">
+      <button class="btn-secondary" style="margin-top:0" onclick="switchTab('profile', document.getElementById('tab-profile'))">
+        Изменить профиль абитуриента
+      </button>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <div class="nav-tab active" id="tab-profile" onclick="switchTab('profile', this)">
+      <span class="nav-icon">◈</span>Подбор
+    </div>
+    <div class="nav-tab" id="tab-apps" onclick="switchTab('apps', this)">
+      <span class="nav-icon">◷</span>Заявки
+    </div>
+    <div class="nav-tab" id="tab-chat" onclick="switchTab('chat', this)">
+      <span class="nav-icon">◉</span>Чат
+    </div>
+    <div class="nav-tab" id="tab-user" onclick="switchTab('user', this)">
+      <span class="nav-icon">◌</span>Профиль
+    </div>
+  </nav>
+
+</div>
+
+<script>
+// ─── CONFIG ────────────────────────────────────────────────
+const API = '';  // пустой = тот же origin (FastAPI раздаёт этот файл)
+
+// ─── STATE ─────────────────────────────────────────────────
+const state = {
+  token: null,
+  firstName: '',
+  results: [],
+  selectedIds: new Set(),
+  selectMode: false,
+  currentProgramId: null,
+  prevScreen: 'profile',
+  currentScreen: 'profile',
+  chatInit: false,
+};
+
+// ─── TELEGRAM AUTH ─────────────────────────────────────────
+const tg = window.Telegram?.WebApp;
+
+async function init() {
+  if (tg) {
+    tg.ready();
+    tg.expand();
+    const u = tg.initDataUnsafe?.user;
+    if (u) {
+      state.firstName = u.first_name || '';
+      document.getElementById('user-avatar').textContent = (u.first_name || 'U')[0].toUpperCase();
+      document.getElementById('user-name').textContent =
+        (u.first_name || '') + (u.last_name ? ' ' + u.last_name : '');
+      document.getElementById('user-handle').textContent =
+        u.username ? '@' + u.username : '';
+    }
+  }
+
+  try {
+    const resp = await fetch(`${API}/auth/telegram`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ init_data: tg?.initData || '' }),
+    });
+    if (resp.ok) {
+      const data = await resp.json();
+      state.token = data.token;
+      // Fill profile from server if Telegram didn't provide it
+      if (!state.firstName && data.first_name) {
+        state.firstName = data.first_name;
+        document.getElementById('user-avatar').textContent = data.first_name[0].toUpperCase();
+        document.getElementById('user-name').textContent = data.first_name;
+      }
+    }
+  } catch (e) {
+    console.warn('Auth failed, dev mode');
+  }
+
+  setupProfile();
+}
+
+function authHeaders() {
+  const h = { 'Content-Type': 'application/json' };
+  if (state.token) h['Authorization'] = 'Bearer ' + state.token;
+  return h;
+}
+
+// ─── NAVIGATION ────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('screen-' + id);
+  if (el) { el.classList.add('active'); el.scrollTop = 0; }
+  state.prevScreen = state.currentScreen;
+  state.currentScreen = id;
+}
+
+function switchTab(id, el) {
+  showScreen(id);
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  if (id === 'apps') loadApps();
+  if (id === 'user') loadUserStats();
+  if (id === 'chat' && !state.chatInit) { initChat(); state.chatInit = true; }
+}
+
+// ─── PROFILE FORM ──────────────────────────────────────────
+function setupProfile() {
+  ['chips-country', 'chips-field', 'chips-degree'].forEach(gid => {
+    document.getElementById(gid)?.querySelectorAll('.chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.getElementById(gid).querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+        chip.classList.add('selected');
+      });
+    });
+  });
+
+  const gpa = document.getElementById('slider-gpa');
+  const valGpa = document.getElementById('val-gpa');
+  gpa.addEventListener('input', () => { valGpa.textContent = (gpa.value / 10).toFixed(1); });
+
+  const ielts = document.getElementById('slider-ielts');
+  const valIelts = document.getElementById('val-ielts');
+  ielts.addEventListener('input', () => { valIelts.textContent = (ielts.value / 10).toFixed(1); });
+
+  const budget = document.getElementById('slider-budget');
+  const valBudget = document.getElementById('val-budget');
+  budget.addEventListener('input', () => {
+    valBudget.textContent = parseInt(budget.value).toLocaleString('ru') + ' €';
+  });
+
+  document.getElementById('btn-find').addEventListener('click', onFindPrograms);
+}
+
+function getChipValue(gid) {
+  return document.querySelector('#' + gid + ' .chip.selected')?.dataset.value || null;
+}
+
+async function onFindPrograms() {
+  const field = getChipValue('chips-field');
+  const degree = getChipValue('chips-degree');
+  const country = getChipValue('chips-country');
+  const gpa = parseFloat(document.getElementById('slider-gpa').value) / 10;
+  const ielts = parseFloat(document.getElementById('slider-ielts').value) / 10;
+  const budget = parseInt(document.getElementById('slider-budget').value);
+
+  if (!field || !degree) {
+    tg?.showAlert('Выбери направление и тип программы');
+    return;
+  }
+
+  const btn = document.getElementById('btn-find');
+  btn.disabled = true;
+  btn.textContent = 'Поиск...';
+  showScreen('results');
+  document.getElementById('results-list').innerHTML =
+    '<div class="loading"><div class="spinner"></div>Ищем программы...</div>';
+  document.getElementById('results-actions').style.display = 'none';
+  document.getElementById('results-sub').textContent = 'поиск...';
+
+  try {
+    const resp = await fetch(`${API}/match/`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ gpa, ielts, budget, field, degree_type: degree, country }),
+    });
+    if (!resp.ok) throw new Error();
+    state.results = await resp.json();
+    renderResults(state.results);
+  } catch {
+    document.getElementById('results-list').innerHTML =
+      '<div class="empty"><div class="empty-icon">⚠️</div>Ошибка при поиске.<br>Проверь соединение и попробуй снова.</div>';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Найти программы →';
+  }
+}
+
+// ─── RESULTS ───────────────────────────────────────────────
+function renderResults(results) {
+  const list = document.getElementById('results-list');
+  const sub = document.getElementById('results-sub');
+  const actions = document.getElementById('results-actions');
+  state.selectMode = false;
+  state.selectedIds.clear();
+
+  if (!results || !results.length) {
+    list.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div>Программы не найдены.<br>Попробуй изменить параметры.</div>';
+    actions.style.display = 'none';
+    sub.textContent = 'Ничего не найдено';
+    return;
+  }
+
+  sub.textContent = 'Найдено ' + results.length + ' · топ-5 выделены';
+  actions.style.display = 'block';
+
+  list.innerHTML = results.map((p, i) => {
+    const isTop = i < 5;
+    const score = Math.round(p.score);
+    const barColor = score >= 75
+      ? 'linear-gradient(90deg,#10b981,#6ee7b7)'
+      : score >= 50
+        ? 'linear-gradient(90deg,#f59e0b,#fcd34d)'
+        : 'linear-gradient(90deg,#ef4444,#fca5a5)';
+    const scoreColor = score >= 75 ? '#6ee7b7' : score >= 50 ? '#fcd34d' : '#fca5a5';
+    const deadline = p.deadline ? formatDate(p.deadline) : 'уточни на сайте';
+    const tuition = p.tuition_year ? p.tuition_year.toLocaleString('ru') + ' €/год' : 'Бесплатно';
+    return `
+      <div class="prog-card${isTop ? ' top' : ''}" id="card-${p.program_id}" onclick="onCardClick(${p.program_id})">
+        ${isTop ? `<div class="top-badge">★ Топ-${i+1} · ${score}%</div>` : ''}
+        <div class="card-cb-wrap" id="cbwrap-${p.program_id}">
+          <input type="checkbox" id="cb-${p.program_id}" onclick="event.stopPropagation();toggleSelect(${p.program_id})">
+        </div>
+        <div class="prog-name">${esc(p.program_name)}</div>
+        <div class="prog-uni">${esc(p.university_name)} · ${esc(p.country)}</div>
+        <div class="prog-meta">
+          <span class="prog-tag">💰 ${tuition}</span>
+          <span class="prog-tag">🎓 IELTS ${p.min_ielts}+</span>
+          <span class="prog-tag">📅 ${deadline}</span>
+          ${!isTop ? `<span class="prog-score" style="color:${scoreColor}">${score}%</span>` : ''}
+        </div>
+        <div class="prog-bar-wrap"><div class="prog-bar" style="width:${score}%;background:${barColor}"></div></div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('btn-add-top5').onclick = () =>
+    addToDeadlines(results.slice(0, 5).map(p => p.program_id));
+
+  const btnM = document.getElementById('btn-add-manual');
+  btnM.textContent = 'Выбрать вручную';
+  btnM.onclick = () => {
+    state.selectMode = !state.selectMode;
+    if (state.selectMode) {
+      btnM.textContent = 'Добавить выбранные';
+      document.querySelectorAll('.card-cb-wrap').forEach(el => el.style.display = 'block');
+    } else {
+      const ids = [...state.selectedIds];
+      if (ids.length) { addToDeadlines(ids); }
+      else {
+        btnM.textContent = 'Выбрать вручную';
+        document.querySelectorAll('.card-cb-wrap').forEach(el => el.style.display = 'none');
+      }
+    }
+  };
+}
+
+function onCardClick(id) {
+  if (state.selectMode) { toggleSelect(id); return; }
+  openChecklist(id);
+}
+
+function toggleSelect(id) {
+  const cb = document.getElementById('cb-' + id);
+  if (state.selectedIds.has(id)) { state.selectedIds.delete(id); if (cb) cb.checked = false; }
+  else { state.selectedIds.add(id); if (cb) cb.checked = true; }
+}
+
+async function addToDeadlines(ids) {
+  if (!ids.length) return;
+  try {
+    const resp = await fetch(`${API}/deadlines/`, {
+      method: 'POST', headers: authHeaders(),
+      body: JSON.stringify({ program_ids: ids }),
+    });
+    if (!resp.ok) throw new Error();
+    tg?.showAlert('✅ Добавлено ' + ids.length + ' программ в заявки!');
+    switchTab('apps', document.getElementById('tab-apps'));
+  } catch {
+    tg?.showAlert('Ошибка при сохранении. Попробуй снова.');
+  }
+}
+
+// ─── CHECKLIST ─────────────────────────────────────────────
+async function openChecklist(programId) {
+  state.currentProgramId = programId;
+  const from = state.currentScreen;
+  showScreen('checklist');
+
+  document.getElementById('cl-title').textContent = 'Чеклист';
+  document.getElementById('cl-sub').textContent = '';
+  document.getElementById('checklist-header').innerHTML =
+    '<div class="loading"><div class="spinner"></div>Загрузка...</div>';
+  document.getElementById('checklist-list').innerHTML = '';
+
+  document.getElementById('checklist-back-btn').onclick = () => {
+    showScreen(from);
+    if (from === 'apps') document.getElementById('tab-apps').click();
+  };
+
+  try {
+    const resp = await fetch(`${API}/checklist/${programId}`, { headers: authHeaders() });
+    if (!resp.ok) throw new Error();
+    renderChecklist(await resp.json());
+  } catch {
+    document.getElementById('checklist-header').innerHTML =
+      '<div class="empty">Ошибка загрузки чеклиста</div>';
+  }
+}
+
+function renderChecklist(data) {
+  document.getElementById('cl-title').textContent = data.program_name || 'Чеклист';
+  document.getElementById('cl-sub').textContent = data.university_name || '';
+
+  const urgent = data.days_left !== null && data.days_left <= 14 && data.days_left >= 0;
+  const bannerCls = urgent ? 'banner-red' : 'banner-amber';
+  const done = (data.items || []).filter(i => i.is_done).length;
+  const total = (data.items || []).length;
+  const pct = total ? Math.round(done / total * 100) : 0;
+  const dlText = data.deadline
+    ? '📅 Дедлайн: ' + formatDate(data.deadline) + (data.days_left !== null ? ' · ' + data.days_left + ' дн.' : '')
+    : '📅 Дедлайн не указан';
+
+  document.getElementById('checklist-header').innerHTML = `
+    <div class="notif-banner ${bannerCls}">
+      <div class="notif-dot"></div><div>${dlText}</div>
+    </div>
+    <div class="progress-label">
+      <span>Документы</span>
+      <span id="cl-progress">${done} из ${total} готово</span>
+    </div>
+    <div class="prog-bar-wrap" style="height:6px;margin-bottom:16px">
+      <div class="prog-bar" style="width:${pct}%;background:linear-gradient(90deg,var(--grad1),var(--grad3))"></div>
+    </div>`;
+
+  document.getElementById('checklist-list').innerHTML = (data.items || []).map(item => `
+    <div class="cl-item" onclick="toggleChecklistItem(${item.id}, !document.getElementById('chk-'+${item.id}).classList.contains('checked'))">
+      <div class="checkbox${item.is_done ? ' checked' : ''}" id="chk-${item.id}"></div>
+      <div>
+        <div class="cl-text">${esc(item.item_name)}</div>
+        ${item.hint ? `<div class="cl-hint">${esc(item.hint)}</div>` : ''}
+      </div>
+    </div>`).join('');
+
+  document.getElementById('btn-download-ics').onclick = downloadIcs;
+}
+
+async function toggleChecklistItem(itemId, isDone) {
+  const chk = document.getElementById('chk-' + itemId);
+  if (chk) chk.classList.toggle('checked', isDone);
+  const all = document.querySelectorAll('#checklist-list .checkbox').length;
+  const done = document.querySelectorAll('#checklist-list .checkbox.checked').length;
+  const prog = document.getElementById('cl-progress');
+  if (prog) prog.textContent = done + ' из ' + all + ' готово';
+  const pct = all ? Math.round(done / all * 100) : 0;
+  const bar = document.querySelector('#checklist-header .prog-bar');
+  if (bar) bar.style.width = pct + '%';
+  try {
+    await fetch(`${API}/checklist/${itemId}`, {
+      method: 'PATCH', headers: authHeaders(),
+      body: JSON.stringify({ is_done: isDone }),
+    });
+  } catch {
+    if (chk) chk.classList.toggle('checked', !isDone);
+  }
+}
+
+// ─── MY APPS ───────────────────────────────────────────────
+async function loadApps() {
+  const list = document.getElementById('apps-list');
+  const sub = document.getElementById('apps-sub');
+  list.innerHTML = '<div class="loading"><div class="spinner"></div>Загрузка...</div>';
+  try {
+    const resp = await fetch(`${API}/deadlines/`, { headers: authHeaders() });
+    if (!resp.ok) throw new Error();
+    const items = await resp.json();
+    sub.textContent = items.length ? items.length + ' программ сохранено' : '';
+    if (!items.length) {
+      list.innerHTML = '<div class="empty"><div class="empty-icon">📭</div>Нет сохранённых программ.<br>Найди программы через «Подбор».</div>';
+      return;
+    }
+    list.innerHTML = items.map(item => {
+      const cls = item.days_left <= 7 ? 'days-red' : item.days_left <= 30 ? 'days-amber' : 'days-green';
+      return `
+        <div class="deadline-card" onclick="openChecklist(${item.program_id})">
+          <div class="dl-info">
+            <div class="dl-name">${esc(item.program_name)}</div>
+            <div class="dl-uni">${esc(item.university_name)} · ${item.deadline ? formatDate(item.deadline) : '—'}</div>
+          </div>
+          <span class="days-badge ${cls}">${item.days_left} дн.</span>
+        </div>`;
+    }).join('');
+  } catch {
+    list.innerHTML = '<div class="empty">Ошибка загрузки</div>';
+  }
+}
+
+// ─── USER STATS ────────────────────────────────────────────
+async function loadUserStats() {
+  // Fill name from Telegram or state
+  const u = tg?.initDataUnsafe?.user;
+  if (u) {
+    const name = (u.first_name || '') + (u.last_name ? ' ' + u.last_name : '');
+    document.getElementById('user-name').textContent = name || 'Пользователь';
+    document.getElementById('user-avatar').textContent = (u.first_name || 'U')[0].toUpperCase();
+    document.getElementById('user-handle').textContent = u.username ? '@' + u.username : '';
+  } else if (state.firstName) {
+    document.getElementById('user-name').textContent = state.firstName;
+    document.getElementById('user-avatar').textContent = state.firstName[0].toUpperCase();
+  }
+
+  try {
+    const resp = await fetch(`${API}/deadlines/`, { headers: authHeaders() });
+    if (!resp.ok) return;
+    const items = await resp.json();
+    document.getElementById('stat-programs').textContent = items.length || '0';
+    if (items.length) {
+      document.getElementById('stat-days').textContent = Math.min(...items.map(i => i.days_left));
+    }
+  } catch {}
+}
+
+// ─── ICS EXPORT ────────────────────────────────────────────
+async function downloadIcs() {
+  try {
+    const resp = await fetch(`${API}/export/ics`, { headers: authHeaders() });
+    if (!resp.ok) throw new Error();
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'unimatch_deadlines.ics'; a.click();
+    URL.revokeObjectURL(url);
+  } catch {
+    tg?.showAlert('Ошибка при скачивании файла');
+  }
+}
+
+// ─── AI CHAT ───────────────────────────────────────────────
+function initChat() {
+  appendBotMsg(
+    'Привет' + (state.firstName ? ', ' + state.firstName : '') + '! 👋 Помогу с вопросами о поступлении.\n\nСпроси меня что угодно:',
+    ['Подобрать программы под мой профиль', 'Какие документы нужны для поступления?', 'Стоимость обучения в Германии']
+  );
+  document.getElementById('chat-send').addEventListener('click', sendMsg);
+  document.getElementById('chat-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') sendMsg();
+  });
+}
+
+async function sendMsg() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  addUserMsg(text);
+  const tid = appendBotMsg('⏳', null, true);
+  try {
+    const resp = await fetch(`${API}/chat/`, {
+      method: 'POST', headers: authHeaders(),
+      body: JSON.stringify({ message: text }),
+    });
+    if (!resp.ok) throw new Error();
+    const data = await resp.json();
+    updateMsg(tid, data.reply);
+  } catch {
+    updateMsg(tid, 'Ошибка соединения. Попробуй снова.');
+  }
+}
+
+function onQuickReply(text) {
+  document.querySelectorAll('.quick-replies').forEach(el => el.remove());
+  document.getElementById('chat-input').value = text;
+  sendMsg();
+}
+
+function addUserMsg(text) {
+  const d = document.createElement('div');
+  d.className = 'msg-user-wrap';
+  d.innerHTML = '<div class="msg-user">' + esc(text) + '</div>';
+  document.getElementById('chat-messages').appendChild(d);
+  scrollChat();
+}
+
+function appendBotMsg(text, quickReplies, isTyping) {
+  const id = 'msg-' + Date.now();
+  const d = document.createElement('div');
+  d.className = 'msg-bot-wrap'; d.id = id;
+  let html = '<div class="msg-bot">' + (isTyping ? '⏳' : esc(text).replace(/\n/g, '<br>')) + '</div>';
+  if (quickReplies) {
+    html += '<div class="quick-replies">' +
+      quickReplies.map(r => `<button class="qr-btn" onclick="onQuickReply('${esc(r)}')">${esc(r)}</button>`).join('') +
+      '</div>';
+  }
+  d.innerHTML = html;
+  document.getElementById('chat-messages').appendChild(d);
+  scrollChat();
+  return id;
+}
+
+function updateMsg(id, text) {
+  const el = document.getElementById(id);
+  if (el) el.querySelector('.msg-bot').innerHTML = esc(text).replace(/\n/g, '<br>');
+}
+
+function scrollChat() {
+  const el = document.getElementById('chat-messages');
+  el.scrollTop = el.scrollHeight;
+}
+
+// ─── UTILS ─────────────────────────────────────────────────
+function formatDate(s) {
+  return new Date(s).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── START ──────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
