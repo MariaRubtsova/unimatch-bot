@@ -23,21 +23,17 @@ class TokenResponse(BaseModel):
 async def auth_telegram(body: InitDataRequest):
     import logging
     logger = logging.getLogger(__name__)
-    logger.info(f"init_data length: {len(body.init_data)}, preview: {body.init_data[:80]}")
-
-    logger.info(f"init_data length={len(body.init_data)}, empty={not body.init_data}")
+    print(f"AUTH: init_data length={len(body.init_data)}", flush=True)
 
     if not body.init_data:
-        # Dev mode — no Telegram context
+        print("AUTH: empty init_data, returning Dev", flush=True)
         return TokenResponse(token=create_jwt(0), user_id=0, first_name="Dev")
 
     user_data = verify_telegram_init_data(body.init_data)
-    logger.info(f"user_data: {user_data}")
-
     user_id = int(user_data["id"])
     first_name = user_data.get("first_name", "")
     username = user_data.get("username")
-    logger.info(f"user_id={user_id}, first_name={first_name}")
+    print(f"AUTH: user_id={user_id}, first_name={first_name}", flush=True)
 
     async with AsyncSessionLocal() as session:
         stmt = pg_insert(User).values(
