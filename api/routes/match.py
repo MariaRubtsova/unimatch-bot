@@ -41,9 +41,6 @@ async def match_programs(
 ):
     query = select(Program).where(Program.is_active == True)
 
-    if body.country and body.country.lower() != "другая":
-        query = query.where(Program.country.ilike(f"%{body.country}%"))
-
     if body.degree_type:
         query = query.where(Program.degree_type == body.degree_type.lower())
 

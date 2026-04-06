@@ -48,13 +48,13 @@ def score_program(profile: UserProfile, program: dict) -> Optional[float]:
 
     total = 0.0
 
-    # GPA score (40 pts max)
-    gpa_score = min((profile.gpa / avg_gpa) * 40, 40)
+    # GPA score (30 pts max)
+    gpa_score = min((profile.gpa / avg_gpa) * 30, 30)
     total += gpa_score
 
-    # IELTS score (30 pts max)
+    # IELTS score (25 pts max)
     if profile.ielts >= min_ielts:
-        ielts_score = min((profile.ielts / avg_ielts) * 30, 30)
+        ielts_score = min((profile.ielts / avg_ielts) * 25, 25)
         total += ielts_score
 
     # Budget score (20 pts)
@@ -64,6 +64,12 @@ def score_program(profile: UserProfile, program: dict) -> Optional[float]:
     # Field match (10 pts)
     if program.get("field", "").lower() == profile.field.lower():
         total += 10
+
+    # Country match (15 pts)
+    user_country = (profile.country or "").lower().strip()
+    prog_country = (program.get("country") or "").lower().strip()
+    if user_country and user_country != "другая" and user_country in prog_country:
+        total += 15
 
     return round(min(total, 100), 1)
 

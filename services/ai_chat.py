@@ -13,19 +13,63 @@ YANDEX_API_KEY = os.getenv("YANDEX_GPT_API_KEY", "")
 YANDEX_FOLDER_ID = os.getenv("YANDEX_GPT_FOLDER_ID", "")
 YANDEX_MODEL = os.getenv("YANDEX_GPT_MODEL", "yandexgpt-lite")
 
-SYSTEM_PROMPT = """Ты — дружелюбный помощник по поступлению в зарубежные университеты.
-Отвечай на русском языке. Используй только предоставленный контекст с данными о программах.
-Если информации нет в контексте — честно скажи об этом."""
+SYSTEM_PROMPT = """Ты — дружелюбный и экспертный помощник по поступлению в зарубежные университеты. Тебя зовут UniMatch AI.
+
+Отвечай на русском языке, кратко и по делу.
+
+Правила:
+1. Если вопрос про конкретные программы, университеты, требования, дедлайны, стоимость — используй контекст с данными из базы программ.
+2. Если вопрос общий (зачем учиться за рубежом, как писать мотивационное письмо, что такое GPA, как получить визу, советы по поступлению) — отвечай из своих знаний как эксперт.
+3. Если в базе нет подходящих программ — честно скажи и дай общий совет.
+4. Не выдумывай конкретные программы которых нет в базе.
+5. Будь мотивирующим и поддерживающим."""
 
 
-async def search_relevant_programs(query: str, session: AsyncSession, limit: int = 5) -> list[dict]:
+COUNTRY_ALIASES = {
+    "германии": "germany", "германия": "germany",
+    "франции": "france", "франция": "france",
+    "великобритании": "uk", "британии": "uk", "англии": "uk",
+    "сша": "usa", "америке": "usa", "америка": "usa",
+    "канаде": "canada", "канада": "canada",
+    "нидерландах": "netherlands", "голландии": "netherlands",
+    "швеции": "sweden", "швеция": "sweden",
+    "финляндии": "finland", "финляндия": "finland",
+    "австрии": "austria", "австрия": "austria",
+    "испании": "spain", "испания": "spain",
+    "италии": "italy", "италия": "italy",
+    "чехии": "czech", "чехия": "czech",
+    "польши": "poland", "польша": "poland",
+}
+
+FIELD_ALIASES = {
+    "компьютерных": "cs", "программировани": "cs", "айти": "cs",
+    "бизнес": "business", "менеджмент": "business", "mba": "mba",
+    "инженери": "engineering", "технологи": "engineering",
+    "медицин": "medicine", "врач": "medicine",
+}
+
+
+async def search_relevant_programs(query: str, session: AsyncSession, limit: int = 8) -> list[dict]:
     """Simple full-text search for relevant programs (RAG retrieval step)."""
     words = query.lower().split()
+    # translate Russian geo/field terms to English
+    translated = []
+    for word in words:
+        for ru, en in COUNTRY_ALIASES.items():
+            if ru in word:
+                translated.append(en)
+        for ru, en in FIELD_ALIASES.items():
+            if ru in word:
+                translated.append(en)
+        translated.append(word)
+
     filters = []
-    for word in words[:5]:  # limit to first 5 words
+    for word in translated[:10]:
         filters.append(Program.requirements_text.ilike(f"%{word}%"))
         filters.append(Program.program_name.ilike(f"%{word}%"))
         filters.append(Program.university_name.ilike(f"%{word}%"))
+        filters.append(Program.country.ilike(f"%{word}%"))
+        filters.append(Program.field.ilike(f"%{word}%"))
 
     result = await session.execute(
         select(Program)
@@ -34,6 +78,13 @@ async def search_relevant_programs(query: str, session: AsyncSession, limit: int
         .limit(limit)
     )
     programs = result.scalars().all()
+
+    # fallback: return all active programs if nothing found
+    if not programs:
+        result = await session.execute(
+            select(Program).where(Program.is_active == True).limit(limit)
+        )
+        programs = result.scalars().all()
 
     return [
         {
