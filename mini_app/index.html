@@ -405,6 +405,23 @@ input[type=range]::-webkit-slider-thumb {
 .setting-label { font-size: 13px; font-weight: 500; color: var(--text); }
 .setting-val { font-size: 12px; color: var(--text3); }
 
+/* TOGGLE SWITCH */
+.toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute; cursor: pointer; inset: 0;
+  background: rgba(255,255,255,0.15); border-radius: 24px;
+  transition: .2s;
+}
+.toggle-slider:before {
+  content: ''; position: absolute;
+  width: 18px; height: 18px; border-radius: 50%;
+  left: 3px; bottom: 3px; background: white;
+  transition: .2s;
+}
+.toggle-switch input:checked + .toggle-slider { background: linear-gradient(135deg, var(--grad1), var(--grad2)); }
+.toggle-switch input:checked + .toggle-slider:before { transform: translateX(20px); }
+
 /* NAV */
 .bottom-nav {
   position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
@@ -649,10 +666,69 @@ input[type=range]::-webkit-slider-thumb {
     <div class="stats-row">
       <div class="stat-card"><div class="stat-val" id="stat-programs">—</div><div class="stat-label">программ</div></div>
       <div class="stat-card"><div class="stat-val" id="stat-days">—</div><div class="stat-label">дней до дедлайна</div></div>
+      <div class="stat-card"><div class="stat-val" id="stat-ready">—</div><div class="stat-label">готовность</div></div>
     </div>
+
+    <div class="settings-section">
+      <div class="settings-label">Мой профиль</div>
+      <div class="settings-card">
+        <div class="setting-row">
+          <span class="setting-label">Страна</span>
+          <span class="setting-val" id="prof-country">—</span>
+        </div>
+        <div class="setting-row">
+          <span class="setting-label">Направление</span>
+          <span class="setting-val" id="prof-field">—</span>
+        </div>
+        <div class="setting-row">
+          <span class="setting-label">Тип программы</span>
+          <span class="setting-val" id="prof-degree">—</span>
+        </div>
+        <div class="setting-row">
+          <span class="setting-label">GPA</span>
+          <span class="setting-val" id="prof-gpa">—</span>
+        </div>
+        <div class="setting-row">
+          <span class="setting-label">IELTS</span>
+          <span class="setting-val" id="prof-ielts">—</span>
+        </div>
+        <div class="setting-row">
+          <span class="setting-label">Бюджет</span>
+          <span class="setting-val" id="prof-budget">—</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-label">Уведомления о дедлайнах</div>
+      <div class="settings-card">
+        <div class="setting-row">
+          <span class="setting-label">За 30 дней</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="notif-30" onchange="saveNotifSettings()">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <span class="setting-label">За 7 дней</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="notif-7" onchange="saveNotifSettings()">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <span class="setting-label">За 1 день</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="notif-1" onchange="saveNotifSettings()">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
     <div style="padding: 0 16px 16px">
       <button class="btn-secondary" style="margin-top:0" onclick="switchTab('profile', document.getElementById('tab-profile'))">
-        Изменить профиль абитуриента
+        ✏️ Изменить профиль абитуриента
       </button>
     </div>
   </div>
@@ -1143,6 +1219,9 @@ async function loadApps() {
 }
 
 // ─── USER STATS ────────────────────────────────────────────
+const FIELD_LABELS = { cs: 'CS / IT', business: 'Business', engineering: 'Engineering', science: 'Science', medicine: 'Medicine', other: 'Другое' };
+const DEGREE_LABELS = { master: 'Магистратура', bachelor: 'Бакалавриат', mba: 'MBA', phd: 'PhD' };
+
 async function loadUserStats() {
   // Fill name from Telegram or state
   const u = tg?.initDataUnsafe?.user;
@@ -1156,15 +1235,54 @@ async function loadUserStats() {
     document.getElementById('user-avatar').textContent = state.firstName[0].toUpperCase();
   }
 
+  // Fill profile data from current form state
+  const country = getChipValue('chips-country') || '—';
+  const field = getChipValue('chips-field');
+  const degree = getChipValue('chips-degree');
+  const gpa = (parseFloat(document.getElementById('slider-gpa').value) / 10).toFixed(1);
+  const ielts = (parseFloat(document.getElementById('slider-ielts').value) / 10).toFixed(1);
+  const budget = parseInt(document.getElementById('slider-budget').value).toLocaleString('ru') + ' €/год';
+
+  document.getElementById('prof-country').textContent = country;
+  document.getElementById('prof-field').textContent = field ? (FIELD_LABELS[field] || field) : '—';
+  document.getElementById('prof-degree').textContent = degree ? (DEGREE_LABELS[degree] || degree) : '—';
+  document.getElementById('prof-gpa').textContent = gpa;
+  document.getElementById('prof-ielts').textContent = ielts;
+  document.getElementById('prof-budget').textContent = budget;
+
+  // Load notification settings from localStorage
+  const notif = JSON.parse(localStorage.getItem('notif_settings') || '{"n30":true,"n7":true,"n1":true}');
+  document.getElementById('notif-30').checked = notif.n30;
+  document.getElementById('notif-7').checked = notif.n7;
+  document.getElementById('notif-1').checked = notif.n1;
+
   try {
     const resp = await fetch(`${API}/deadlines/`, { headers: authHeaders() });
     if (!resp.ok) return;
     const items = await resp.json();
     document.getElementById('stat-programs').textContent = items.length || '0';
     if (items.length) {
-      document.getElementById('stat-days').textContent = Math.min(...items.map(i => i.days_left));
+      const minDays = Math.min(...items.map(i => i.days_left));
+      document.getElementById('stat-days').textContent = minDays >= 0 ? minDays : '—';
+
+      // Calculate readiness %
+      const totalItems = items.reduce((s, i) => s + (i.total_items || 0), 0);
+      const doneItems = items.reduce((s, i) => s + (i.done_items || 0), 0);
+      document.getElementById('stat-ready').textContent = totalItems ? Math.round(doneItems / totalItems * 100) + '%' : '—';
+    } else {
+      document.getElementById('stat-days').textContent = '—';
+      document.getElementById('stat-ready').textContent = '—';
     }
   } catch {}
+}
+
+function saveNotifSettings() {
+  const notif = {
+    n30: document.getElementById('notif-30').checked,
+    n7: document.getElementById('notif-7').checked,
+    n1: document.getElementById('notif-1').checked,
+  };
+  localStorage.setItem('notif_settings', JSON.stringify(notif));
 }
 
 // ─── ICS EXPORT ────────────────────────────────────────────
