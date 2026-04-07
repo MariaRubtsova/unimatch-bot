@@ -876,7 +876,15 @@ function renderResults(results) {
   state.selectedIds.clear();
 
   if (!results || !results.length) {
-    list.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div>Программы не найдены.<br>Попробуй изменить параметры.</div>';
+    const selectedCountry = getChipValue('chips-country');
+    const hasCountryFilter = selectedCountry && selectedCountry !== 'Другая' && selectedCountry !== 'Любая';
+    list.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">🔍</div>
+        Программы не найдены.<br>
+        Попробуй изменить параметры${hasCountryFilter ? ' или выбрать другую страну' : ''}.
+        ${hasCountryFilter ? `<br><br><button class="btn-secondary" style="margin-top:0;width:auto;padding:10px 20px" onclick="searchWithoutCountry()">🌍 Искать во всех странах</button>` : ''}
+      </div>`;
     actions.style.display = 'none';
     sub.textContent = 'Ничего не найдено';
     return;
@@ -933,6 +941,15 @@ function renderResults(results) {
       }
     }
   };
+}
+
+function searchWithoutCountry() {
+  // Select "Любая" chip and re-search
+  const group = document.getElementById('chips-country');
+  group.querySelectorAll('.chip').forEach(c => {
+    c.classList.toggle('selected', c.dataset.value === 'Любая');
+  });
+  onFindPrograms();
 }
 
 function onCardClick(id) {
